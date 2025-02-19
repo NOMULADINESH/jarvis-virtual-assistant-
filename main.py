@@ -1,21 +1,29 @@
 import requests
-import random
-import jokes
+import music_library
 import speech_recognition as sr
 import webbrowser
 import pyttsx3
-import music_liberies
+import openai  # Correct OpenAI API import
 
-recognizer=sr.Recognizer()
-engine=pyttsx3.init()
+recognizer = sr.Recognizer()
+engine = pyttsx3.init()
 
 def speak(text):
     engine.say(text)
     engine.runAndWait()
 
-def tell_joke():
-    joke = random.choice(jokes)
-    speak(joke)
+def aiProcess(command):
+    openai.api_key = "<Your Key Here>"
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a virtual assistant named jarvis skilled in general tasks like Alexa and Google Cloud. Give short responses please"},
+            {"role": "user", "content": command}
+        ]
+    )
+
+    return completion.choices[0].message.content
 
 def get_weather(city):
     api_key = "ca8041f766714fe59c9670d934237873"  
@@ -35,11 +43,11 @@ def processcommand(c):
     if "open google" in c.lower():
         webbrowser.open("https://google.com")
 
-    elif "open git hub" in c.lower():
-        webbrowser.open("https://git hub.com")    
+    elif "open github" in c.lower():
+        webbrowser.open("https://github.com")  
 
-    elif "open linkdin" in c.lower():
-        webbrowser.open("https://linkdin hub.com")    
+    elif "open linkedin" in c.lower():
+        webbrowser.open("https://linkedin.com")    
 
     elif "open youtube" in c.lower():
         webbrowser.open("https://youtube.com")    
@@ -48,63 +56,52 @@ def processcommand(c):
         webbrowser.open("https://whatsapp.com")    
 
     elif "open chatgpt" in c.lower():
-        webbrowser.open("https://chat gpt hub.com")    
+        webbrowser.open("https://chat.openai.com")    
 
     elif "open black box" in c.lower():
-        webbrowser.open("https://black box ai.com")    
+        webbrowser.open("https://blackbox.com")    
 
     elif "open internshala" in c.lower():
         webbrowser.open("https://internshala.com")    
 
     elif "open notion" in c.lower():
-        webbrowser.open("https://notion.com")    
+        webbrowser.open("https://notion.so")    
 
     elif "open amazon" in c.lower():
         webbrowser.open("https://amazon.com")  
 
     elif c.lower().startswith("play"):
-        songs=c.lower().split(" ")[1]
-        link=music_liberies.music[songs]  
-        webbrowser.open(link) 
+        songs = c.lower().split(" ")[1]
+        if songs in music_library.music:  # Fix for checking if song exists in the dictionary
+            link = music_library.music[songs]  
+            webbrowser.open(link) 
+        else:
+            speak(f"Sorry, I couldn't find {songs}.")
 
-    elif "tell me a joke" in command:
-       tell_joke()
-
-    elif "today headlines" in command:
-        city = command.split("in")[-1].strip()  # Extract city name
+    elif "today headlines" in c.lower():
+        city = c.split("in")[-1].strip()  # Extract city name
         weather_info = get_weather(city)
         speak(weather_info)
 
-
-      
-
-
-if __name__=="__main__":
-    speak("initializing jarvis...")
+if __name__ == "__main__":
+    speak("Initializing Jarvis...")
     while True:
-        # listen for the wakeup word jarvis
+        r = sr.Recognizer()
+        print("Recognizing...")
 
-        r=sr.Recognizer()
-
-        print("recognizing...")
         try:
-           with sr.Microphone() as source:
-              print("listining...")
-              audio=r.listen(source,timeout=2,phrase_time_limit=1)
-              word=r.recognize_google(audio)
-              if(word.lower()=="jarvis"):
-                speak("ya")
-                #listen for command
-           with sr.Microphone() as source:
-              print("jarvis activated...")
-              audio=r.listen(source)
-              command=r.recognize_google(audio)
-
-              processcommand(command)
-
+            with sr.Microphone() as source:
+                print("Listening...")
+                audio = r.listen(source, timeout=2, phrase_time_limit=1)
+                word = r.recognize_google(audio)
+                if word.lower() == "jarvis":
+                    speak("Yes")
+                    
+            with sr.Microphone() as source:
+                print("Jarvis activated...")
+                audio = r.listen(source)
+                command = r.recognize_google(audio)
+                processcommand(command)
 
         except Exception as e:
-            print(f"error {e}")    
-
-
-
+            print(f"Error: {e}")
